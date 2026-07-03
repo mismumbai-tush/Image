@@ -35,7 +35,7 @@ export const createReimagineSlice: StudioStoreSlice<ReimagineSlice> = (set, get)
         uploadedModelImage: null,
         selectedModels: [],
         apparel: [],
-        productImage: null,
+        products: [],
         mockupImage: null,
         designImage: null,
       });

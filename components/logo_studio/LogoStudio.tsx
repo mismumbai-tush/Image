@@ -58,8 +58,8 @@ const LogoStudio: React.FC<LogoStudioProps> = ({ onBack }) => {
         setTargetImages((prev) => [...prev, ...newImages]);
     }, []);
     
-    const { getRootProps: getLogoRootProps, getInputProps: getLogoInputProps, isDragActive: isLogoDragActive } = useDropzone({ onDrop: onLogoDrop, accept: { 'image/*': [] }, multiple: false });
-    const { getRootProps: getTargetRootProps, getInputProps: getTargetInputProps, isDragActive: isTargetDragActive } = useDropzone({ onDrop: onTargetImagesDrop, accept: { 'image/*': [] }, multiple: true });
+    const { getRootProps: getLogoRootProps, getInputProps: getLogoInputProps, isDragActive: isLogoDragActive } = useDropzone({ onDrop: onLogoDrop, accept: { 'image/*': [] }, multiple: false } as any);
+    const { getRootProps: getTargetRootProps, getInputProps: getTargetInputProps, isDragActive: isTargetDragActive } = useDropzone({ onDrop: onTargetImagesDrop, accept: { 'image/*': [] }, multiple: true } as any);
 
     const removeTargetImage = (id: string) => {
         setTargetImages(prev => prev.filter(img => img.id !== id));

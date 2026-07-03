@@ -25,7 +25,7 @@ const CompanionAssetsManager: React.FC = () => {
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
-    });
+    } as any);
 
     return (
         <div>

@@ -42,7 +42,7 @@ const ReverseEngineerPanel: React.FC = () => {
         onDrop,
         accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
         multiple: false
-    });
+    } as any);
 
     const handleCopy = () => {
         if (generatedPrompt) {

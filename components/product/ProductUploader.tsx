@@ -29,7 +29,7 @@ export const ProductUploader: React.FC = () => {
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
-    });
+    } as any);
 
     const handleDragStart = (index: number) => {
         dragIndex.current = index;

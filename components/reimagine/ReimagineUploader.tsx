@@ -13,7 +13,7 @@ const Uploader: React.FC<{
         onDrop,
         accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
         multiple: false
-    });
+    } as any);
 
     return (
         <div {...getRootProps()} className={`flex-grow flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer transition-all duration-200 ${isDragActive ? 'border-violet-500 bg-violet-500/10 shadow-glow-md' : 'border-zinc-700 hover:border-zinc-600'}`}>

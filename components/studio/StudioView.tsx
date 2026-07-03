@@ -51,14 +51,14 @@ export const StudioView: React.FC = () => {
     isSocialMediaPack,
     numberOfImages,
     studioMode,
-    productImage,
+    products,
     mockupImage,
     designImage,
     selectedModels,
     activeImageSources
   } = useStudio();
 
-  const previewImage = studioMode === 'apparel' ? uploadedModelImage : productImage;
+  const previewImage = studioMode === 'apparel' ? uploadedModelImage : (products && products.length > 0 ? products[0].base64 : null);
   const showDesignPreview = studioMode === 'design' && mockupImage && designImage && (!generatedImages || generatedImages.length === 0);
   const showEmptyState = !isGenerating && (!generatedImages || generatedImages.length === 0) && !previewImage && !showDesignPreview;
   const showPreview = !isGenerating && (!generatedImages || generatedImages.length === 0) && previewImage && !showDesignPreview;

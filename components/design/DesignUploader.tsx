@@ -62,7 +62,7 @@ const Uploader: React.FC<{
         onDrop,
         accept: { 'image/*': ['.png'] },
         multiple: false
-    });
+    } as any);
 
     if (image) {
         return (

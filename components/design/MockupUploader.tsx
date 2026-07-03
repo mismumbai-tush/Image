@@ -27,7 +27,7 @@ export const MockupUploader: React.FC = () => {
         onDrop,
         accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
         multiple: false
-    });
+    } as any);
 
     if (mockupImage) {
         return (

@@ -23,6 +23,59 @@ const parseDataUrl = (dataUrl: string) => {
     };
 };
 
+const formatError = (error: any): Error => {
+    let message = "An error occurred during Gemini API generation.";
+    try {
+        if (error && typeof error === 'object') {
+            let errorObj = error;
+            if (error.message) {
+                try {
+                    const parsed = JSON.parse(error.message);
+                    if (parsed.error) errorObj = parsed;
+                } catch {
+                    // Not JSON, use errorObj as is
+                }
+            }
+
+            const apiError = errorObj.error || errorObj;
+            if (apiError && apiError.message) {
+                const status = apiError.status;
+                const code = apiError.code;
+                const rawMsg = apiError.message;
+
+                if (status === "RESOURCE_EXHAUSTED" || code === 429) {
+                    message = "Gemini API Quota Exceeded (429).\n\nThe free tier rate limit has been reached. Please try again in 30-60 seconds. For higher limits, you can add a paid API key in Google AI Studio Settings.";
+                    return new Error(message);
+                } else if (rawMsg.includes("Quota exceeded") || rawMsg.includes("RESOURCE_EXHAUSTED")) {
+                    message = "Gemini API Quota Exceeded. Please try again in 30-60 seconds, or add a paid API key.";
+                    return new Error(message);
+                } else if (rawMsg.includes("API key not valid")) {
+                    message = "Invalid Gemini API Key. Please verify your API key in Google AI Studio Settings.";
+                    return new Error(message);
+                } else {
+                    message = rawMsg;
+                }
+            } else if (error.message) {
+                message = error.message;
+            }
+        } else if (typeof error === 'string') {
+            try {
+                const parsed = JSON.parse(error);
+                if (parsed.error && parsed.error.message) {
+                    message = parsed.error.message;
+                } else {
+                    message = error;
+                }
+            } catch {
+                message = error;
+            }
+        }
+    } catch (e) {
+        // fallback
+    }
+    return new Error(message);
+};
+
 
 // --- MOCK FUNCTIONS for development without API KEY ---
 const mockGenerateImage = async (baseParts: any[], aspectRatio: AspectRatio['value'], numberOfImages: number, negativePrompt: string | undefined, onImageGenerated: (imageB64: string, index: number) => void): Promise<void> => {
@@ -363,7 +416,7 @@ export const geminiService = {
         }
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
+            model: 'gemini-3.1-flash-lite-image',
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
@@ -386,7 +439,7 @@ export const geminiService = {
 
     } catch (error) {
         console.error("Error generating styled image with Gemini:", error);
-        throw error;
+        throw formatError(error);
     }
   },
   
@@ -401,7 +454,7 @@ export const geminiService = {
         const validCategories: ApparelCategory[] = ['Top', 'Bottom', 'Full Body', 'Outerwear', 'Accessory', 'Footwear'];
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             contents: { parts: [imagePart, textPart] },
             config: {
                 responseMimeType: "application/json",
@@ -436,7 +489,7 @@ export const geminiService = {
         const textPrompt = `You are an expert fashion stylist. I will provide you with a list of apparel items. Your task is to determine the correct layering order, from the innermost garment to the outermost. Consider the item's category and description.\n\nHere are the items:\n${itemsString}\n\nReturn ONLY a JSON object with a single key 'orderedIds' which is an array of the item IDs in the correct order.`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             contents: textPrompt,
             config: {
                 responseMimeType: "application/json",
@@ -458,7 +511,7 @@ export const geminiService = {
         return parsed.orderedIds || [];
     } catch(error) {
         console.error("Error suggesting layering from Gemini:", error);
-        throw error;
+        throw formatError(error);
     }
   },
 
@@ -471,7 +524,7 @@ export const geminiService = {
       const textPart = { text: "You are an expert model casting director. Analyze the image of the person. Generate a detailed, professional description suitable for recreating this person with an AI image generator. The description should include gender, estimated age, ethnicity, hair style and color, facial features (eyes, nose, jawline, etc.), and body type. Also suggest a plausible first name for the model. Return ONLY a JSON object with the required properties." };
 
       const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.5-flash",
           contents: { parts: [imagePart, textPart] },
           config: {
               responseMimeType: "application/json",
@@ -492,7 +545,7 @@ export const geminiService = {
 
     } catch (error) {
         console.error("Error describing model with Gemini:", error);
-        throw error;
+        throw formatError(error);
     }
   },
 
@@ -504,14 +557,14 @@ export const geminiService = {
         const textPart = { text: "Analyze the image of the product. Provide a concise, descriptive name for it (e.g., 'Black leather handbag', 'Silver chronograph watch'). Return ONLY the name as a single line of text." };
         
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             contents: { parts: [imagePart, textPart] },
         });
         
         return response.text.trim();
     } catch (error) {
         console.error("Error naming product:", error);
-        throw error;
+        throw formatError(error);
     }
   },
 
@@ -538,7 +591,7 @@ export const geminiService = {
         Return ONLY the JSON object.` };
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             contents: { parts: [imagePart, textPart] },
             config: {
                 responseMimeType: "application/json",
@@ -563,7 +616,7 @@ export const geminiService = {
 
     } catch(error) {
         console.error("Error getting scene suggestions from Gemini:", error);
-        throw error;
+        throw formatError(error);
     }
   },
 
@@ -575,7 +628,7 @@ export const geminiService = {
       const textPart = { text: "Your task is to act as an expert photo editor. You will be given an image of a product. Your sole mission is to perfectly isolate the main product from its background. Return a new image where the isolated product is placed on a pure white background (#FFFFFF). The output image MUST have the exact same dimensions as the input image. Do not add any shadows or effects. The product itself must not be altered." };
 
       const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash-image',
+          model: 'gemini-3.1-flash-lite-image',
           contents: { parts: [textPart, imagePart] },
           config: {
               responseModalities: [Modality.IMAGE, Modality.TEXT],
@@ -594,7 +647,7 @@ export const geminiService = {
       throw new Error("Background removal failed to return an image.");
     } catch(error) {
         console.error("Error removing background with Gemini:", error);
-        throw error;
+        throw formatError(error);
     }
   },
 
@@ -606,7 +659,7 @@ export const geminiService = {
       const textPart = { text: "You are an expert photo editor. Your task is to perfectly isolate the apparel item(s) from the person wearing them. Remove the person completely and place the isolated garment(s) onto a clean, neutral grey background (#cccccc) in a flat-lay style. The output image must have the same dimensions as the input. Do not alter the apparel itself." };
 
       const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash-image',
+          model: 'gemini-3.1-flash-lite-image',
           contents: { parts: [textPart, imagePart] },
           config: {
               responseModalities: [Modality.IMAGE],
@@ -625,7 +678,7 @@ export const geminiService = {
       throw new Error("Garment isolation failed to return an image.");
     } catch(error) {
         console.error("Error isolating garment with Gemini:", error);
-        throw error;
+        throw formatError(error);
     }
   },
 
@@ -645,14 +698,14 @@ export const geminiService = {
       };
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash',
         contents: { parts: [imagePart, textPart] },
       });
       
       return response.text;
     } catch (error) {
       console.error("Error describing image style with Gemini:", error);
-      throw error;
+      throw formatError(error);
     }
   },
 
@@ -700,7 +753,7 @@ export const geminiService = {
         };
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             contents: { parts: [imagePart, textPart] },
             config: {
                 responseMimeType: "application/json",
@@ -774,7 +827,7 @@ For each concept, provide a short, catchy 'name' and a detailed 'description'. T
 Return ONLY a JSON array of 4 objects.`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             contents: textPrompt,
             config: {
                 responseMimeType: "application/json",
@@ -823,7 +876,7 @@ For each concept, provide:
 Return ONLY a JSON array of four objects.` };
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             contents: { parts: [imagePart, textPart] },
             config: {
                 responseMimeType: "application/json",
@@ -852,7 +905,7 @@ Return ONLY a JSON array of four objects.` };
 
     } catch(error) {
         console.error("Error generating photoshoot concepts from Gemini:", error);
-        throw error;
+        throw formatError(error);
     }
   },
 
@@ -880,7 +933,7 @@ Return ONLY a JSON array of four objects.` };
         
         try {
             const response = await ai.models.generateContent({
-              model: 'gemini-2.5-flash-image',
+              model: 'gemini-3.1-flash-lite-image',
               contents: { parts },
               config: {
                 responseModalities: [Modality.IMAGE, Modality.TEXT],
@@ -905,16 +958,16 @@ Return ONLY a JSON array of four objects.` };
             }
             if (!imageFound) {
                 console.warn("No image found in a Gemini response for index " + i, response);
-                // The UI will show a placeholder for the failed image.
+                throw new Error("No image was returned in the AI response.");
             }
         } catch(error) {
             console.error(`Error generating image at index ${i}:`, error);
-            // Continue to the next image even if one fails.
+            throw formatError(error);
         }
       }
     } catch (error) {
       console.error("Error setting up image generation with Gemini:", error);
-      throw error;
+      throw formatError(error);
     }
   },
 
@@ -965,7 +1018,7 @@ Do NOT change any part of the image outside the masked area.`
         }
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
+            model: 'gemini-3.1-flash-lite-image',
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE, Modality.TEXT],
@@ -987,7 +1040,7 @@ Do NOT change any part of the image outside the masked area.`
 
     } catch (error) {
         console.error("Error performing generative edit with Gemini:", error);
-        throw error;
+        throw formatError(error);
     }
   },
   
@@ -1000,14 +1053,14 @@ Do NOT change any part of the image outside the masked area.`
         const textPart = { text: "You are an expert prompt engineer for advanced generative AI image models. Analyze the provided image in detail. Your task is to create a descriptive, high-quality prompt that could generate a similar image. Describe the subject, composition, style (e.g., photography, illustration, 3D render), lighting, camera angle, lens, and any other relevant artistic details. The output must be ONLY the prompt text, without any preamble or explanation." };
         
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             contents: { parts: [imagePart, textPart] },
         });
         
         return response.text.trim();
     } catch (error) {
         console.error("Error reverse engineering prompt:", error);
-        throw error;
+        throw formatError(error);
     }
   },
 

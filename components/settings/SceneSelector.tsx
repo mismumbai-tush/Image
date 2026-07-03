@@ -99,7 +99,7 @@ export const SceneSelector: React.FC = () => {
         onDrop: onCustomBackgroundDrop,
         accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
         multiple: false
-    });
+    } as any);
 
     const handleRemoveCustomBackground = () => {
         // Revert to a default background
@@ -128,7 +128,7 @@ export const SceneSelector: React.FC = () => {
         onDrop: onStyleDrop,
         accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
         multiple: false
-    });
+    } as any);
     
     return (
         <div className="flex flex-col space-y-6">

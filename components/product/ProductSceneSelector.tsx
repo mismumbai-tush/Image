@@ -35,7 +35,7 @@ export const ProductSceneSelector: React.FC = () => {
         onDrop: onStyleDrop,
         accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
         multiple: false
-    });
+    } as any);
     
     const handleSuggestedColorClick = () => {
         if (suggestedBackgroundColor) {

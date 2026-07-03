@@ -25,7 +25,7 @@ const ViewUploader: React.FC<{
         onDrop,
         accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
         multiple: false
-    });
+    } as any);
 
     if (base64) {
         return (

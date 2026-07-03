@@ -156,7 +156,7 @@ export const ModelUploader: React.FC = () => {
         onDrop,
         accept: { 'image/*': ['.jpeg', '.png', '.jpg'] },
         multiple: false
-    });
+    } as any);
     
     const handleCapture = (imageB64: string) => {
         setUploadedModelImage(imageB64);
